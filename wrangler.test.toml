@@ -1,0 +1,5 @@
+name = "oci-catcher-test"
+main = "src/worker.ts"
+
+compatibility_date = "2026-08-15"
+compatibility_flags = ["nodejs_compat"]
