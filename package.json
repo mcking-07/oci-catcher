@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "a cloudflare worker cron that launches an oracle cloud instance the moment host capacity frees up, then sends an ntfy notification.",
   "type": "module",
+  "scripts": {
+    "lint": "eslint ."
+  },
   "author": "muzammil_07",
   "license": "MIT",
   "repository": {
@@ -22,7 +25,12 @@
   ],
   "devDependencies": {
     "@cloudflare/workers-types": "latest",
+    "@eslint/js": "10.0.1",
     "@types/node": "latest",
-    "typescript": "5.8.3"
+    "eslint": "10.9.0",
+    "globals": "17.4.0",
+    "jiti": "2.6.1",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.67.0"
   }
 }
