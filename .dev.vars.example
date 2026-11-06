@@ -1,0 +1,13 @@
+NTFY_TOPIC=oci-catcher-random-suffix
+
+OCI_TENANCY_ID=ocid1.tenancy.oc1..example
+OCI_USER_ID=ocid1.user.oc1..example
+OCI_FINGERPRINT=00:11:22:33:44:55:66:77:88:99:aa:bb:cc:dd:ee:ff
+OCI_COMPARTMENT_ID=ocid1.compartment.oc1..example
+OCI_AVAILABILITY_DOMAIN=abcd:PHX-AD-1
+OCI_SUBNET_ID=ocid1.subnet.oc1.phx.example
+
+INSTANCE_SSH_PUBLIC_KEY="ssh-ed25519 AAAA... user@host"
+
+# set separately, never kept in this file
+# OCI_PRIVATE_KEY (npx wrangler secret put OCI_PRIVATE_KEY < ~/.oci/<name>.pem)
