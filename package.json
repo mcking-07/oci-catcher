@@ -1,0 +1,23 @@
+{
+  "name": "oci-catcher",
+  "version": "1.0.0",
+  "description": "a cloudflare worker cron that launches an oracle cloud instance the moment host capacity frees up, then sends an ntfy notification.",
+  "type": "module",
+  "author": "muzammil_07",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcking-07/oci-catcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mcking-07/oci-catcher/issues"
+  },
+  "homepage": "https://github.com/mcking-07/oci-catcher",
+  "keywords": [
+    "oci",
+    "oracle-cloud",
+    "cloudflare-workers",
+    "cron",
+    "ntfy"
+  ]
+}
