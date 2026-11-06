@@ -4,6 +4,8 @@
   "description": "a cloudflare worker cron that launches an oracle cloud instance the moment host capacity frees up, then sends an ntfy notification.",
   "type": "module",
   "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
     "lint": "eslint ."
   },
   "author": "muzammil_07",
@@ -31,6 +33,13 @@
     "globals": "17.4.0",
     "jiti": "2.6.1",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.67.0"
+    "typescript-eslint": "8.67.0",
+    "wrangler": "latest"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "esbuild@0.28.2": true,
+    "workerd@1.20260815.1": true,
+    "workerd@1.20261104.1": true
   }
 }

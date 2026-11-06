@@ -1,0 +1,32 @@
+name = "oci-catcher"
+main = "src/worker.ts"
+
+compatibility_date = "2026-08-15"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = false
+preview_urls = false
+
+[triggers]
+crons = ["* * * * *"]
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+
+[vars]
+NODE_ENV = "production"
+NTFY_URL = "https://ntfy.sh"
+OCI_REGION = "ap-mumbai-1"
+OCI_IMAGE_ID = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaarixoynpdghelruqbcarlhjjwiuarw3yuhsya75wffri6jxjigp4q"
+INSTANCE_NAME = "percival"
+INSTANCE_HOSTNAME = "percival"
+INSTANCE_SHAPE = "VM.Standard.A1.Flex"
+INSTANCE_OCPUS = "2"
+INSTANCE_MEMORY_GBS = "12"
+INSTANCE_BOOT_VOLUME_GBS = "50"
+INSTANCE_ASSIGN_PUBLIC_IP = "true"
+INSTANCE_TAGS = '{"environment":"godlike"}'
