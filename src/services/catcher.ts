@@ -2,7 +2,7 @@ import { loggerFor } from '../common';
 import { config } from '../config';
 import { OciRequestFailed } from '../errors';
 import type { NtfyClient, OciClient } from '../clients';
-import type { CatchOutcomeType, NotificationType, OciLaunchDetailsType } from '../types';
+import type { CatchOutcomeType, NotificationType, OciCapacityReportType, OciLaunchDetailsType, ShapeConfigType } from '../types';
 
 const logger = loggerFor('services/catcher');
 
@@ -17,6 +17,14 @@ const settle = (error: Error): CatchOutcomeType => {
   const retryable = RETRYABLE_STATUSES.has(Number(status)) || /out of (host )?capacity/i.test(error.message);
 
   return retryable ? { status: 'retrying', reason } : { status: 'failed', reason };
+};
+
+const size_of = ({ ocpus, memory_gbs }: ShapeConfigType) => `${ocpus} ocpu / ${memory_gbs} gb`;
+
+const availability_of = (report: OciCapacityReportType, { ocpus, memory_gbs }: ShapeConfigType): string => {
+  const matches = report.shapeAvailabilities.filter(({ instanceShapeConfig }) => instanceShapeConfig?.ocpus === ocpus && instanceShapeConfig?.memoryInGBs === memory_gbs);
+
+  return matches.find(({ availabilityStatus }) => availabilityStatus === 'AVAILABLE')?.availabilityStatus ?? matches[0]?.availabilityStatus ?? 'UNKNOWN';
 };
 
 class CatcherService {
@@ -52,22 +60,23 @@ class CatcherService {
     if (existing) return { status: 'exists', instance_id: existing.id, lifecycle_state: existing.lifecycleState };
 
     const { tenancy_id, availability_domain } = oci;
-    const { shape, ocpus, memory_gbs } = instance;
+    const { shape, shape_configs } = instance;
 
-    const [report_error, report] = await this.oci.create_capacity_report({ tenancy_id, availability_domain, shape, ocpus, memory_gbs });
+    const [report_error, report] = await this.oci.create_capacity_report({ tenancy_id, availability_domain, shape, shape_configs });
     if (report_error) return settle(report_error);
 
-    const availability = report.shapeAvailabilities[0]?.availabilityStatus ?? 'UNKNOWN';
-    if (availability !== 'AVAILABLE') return { status: 'unavailable', availability };
+    const checks = shape_configs.map(shape_config => ({ shape_config, availability: availability_of(report, shape_config) }));
+    const available = checks.find(({ availability }) => availability === 'AVAILABLE')?.shape_config;
+    if (!available) return { status: 'unavailable', availability: checks.map(({ shape_config, availability }) => `${size_of(shape_config)}: ${availability}`).join(', ') };
 
-    logger.info(`[~] capacity available for [${instance.name}], launching`);
-    const [launch_error, launched] = await this.oci.launch_instance(this.details(), `${instance.name}-${scheduled.getTime()}`);
+    logger.info(`[~] capacity available for [${instance.name}] at [${size_of(available)}], launching`);
+    const [launch_error, launched] = await this.oci.launch_instance(this.details(available), `${instance.name}-${scheduled.getTime()}`);
     if (launch_error) return settle(launch_error);
 
-    return { status: 'launched', instance_id: launched.id };
+    return { status: 'launched', instance_id: launched.id, ...available };
   };
 
-  private details = (): OciLaunchDetailsType => {
+  private details = ({ ocpus, memory_gbs }: ShapeConfigType): OciLaunchDetailsType => {
     const { oci, instance } = config;
 
     return {
@@ -75,7 +84,7 @@ class CatcherService {
       compartmentId: oci.compartment_id,
       displayName: instance.name,
       shape: instance.shape,
-      shapeConfig: { ocpus: instance.ocpus, memoryInGBs: instance.memory_gbs },
+      shapeConfig: { ocpus, memoryInGBs: memory_gbs },
       sourceDetails: { sourceType: 'image', imageId: oci.image_id, bootVolumeSizeInGBs: instance.boot_volume_gbs },
       createVnicDetails: { subnetId: oci.subnet_id, assignPublicIp: instance.assign_public_ip, hostnameLabel: instance.hostname },
       metadata: { ssh_authorized_keys: instance.ssh_public_key },
@@ -84,10 +93,10 @@ class CatcherService {
   };
 
   private notification = (outcome: CatchOutcomeType, scheduled: Date): NotificationType | null => {
-    const { name, shape, ocpus, memory_gbs } = config.instance;
+    const { name, shape } = config.instance;
 
     if (outcome.status === 'launched') {
-      return { title: `${name} launched`, message: `${shape} ${ocpus} ocpu / ${memory_gbs} gb is provisioning: ${outcome.instance_id}`, priority: 'urgent', tags: ['tada'] };
+      return { title: `${name} launched`, message: `${shape} ${size_of(outcome)} is provisioning: ${outcome.instance_id}`, priority: 'urgent', tags: ['tada'] };
     }
 
     if (outcome.status === 'failed' && scheduled.getUTCMinutes() === 0) return { title: 'oci-catcher failed', message: outcome.reason, priority: 'high', tags: ['warning'] };
