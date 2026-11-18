@@ -12,7 +12,8 @@ describe('config', () => {
 
     expect(config.environment).toBe('test');
     expect(config.oci.private_key).toBe('-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----');
-    expect(config.instance).toMatchObject({ name: 'instance-1', ocpus: 2, memory_gbs: 12, boot_volume_gbs: 50, assign_public_ip: true, tags: { environment: 'test' } });
+    expect(config.instance).toMatchObject({ name: 'instance-1', boot_volume_gbs: 50, assign_public_ip: true, tags: { environment: 'test' } });
+    expect(config.instance.shape_configs).toEqual([{ ocpus: 2, memory_gbs: 12 }, { ocpus: 1, memory_gbs: 6 }]);
     expect(config.ntfy).toEqual({ url: 'https://ntfy.example.com', topic: 'oci-catcher-test' });
   });
 
@@ -24,8 +25,11 @@ describe('config', () => {
     expect(() => bootstrap({ ...base, OCI_PRIVATE_KEY: '-----BEGIN RSA PRIVATE KEY-----\nx\n-----END RSA PRIVATE KEY-----' })).toThrow(/pkcs#8/);
   });
 
-  it('rejects malformed numbers, booleans and tags', () => {
-    expect(() => bootstrap({ ...base, INSTANCE_OCPUS: 'two' })).toThrow(/INSTANCE_OCPUS/);
+  it('rejects malformed numbers, shape configs, booleans and tags', () => {
+    expect(() => bootstrap({ ...base, INSTANCE_BOOT_VOLUME_GBS: 'fifty' })).toThrow(/INSTANCE_BOOT_VOLUME_GBS/);
+    expect(() => bootstrap({ ...base, INSTANCE_SHAPE_CONFIGS: '[]' })).toThrow(/INSTANCE_SHAPE_CONFIGS/);
+    expect(() => bootstrap({ ...base, INSTANCE_SHAPE_CONFIGS: '[{"ocpus":2}]' })).toThrow(/INSTANCE_SHAPE_CONFIGS/);
+    expect(() => bootstrap({ ...base, INSTANCE_SHAPE_CONFIGS: '[{"ocpus":"2","memory_gbs":12}]' })).toThrow(/INSTANCE_SHAPE_CONFIGS/);
     expect(() => bootstrap({ ...base, INSTANCE_ASSIGN_PUBLIC_IP: 'yes' })).toThrow(/INSTANCE_ASSIGN_PUBLIC_IP/);
     expect(() => bootstrap({ ...base, INSTANCE_TAGS: '["test"]' })).toThrow(/INSTANCE_TAGS/);
   });

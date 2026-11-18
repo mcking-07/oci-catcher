@@ -30,10 +30,25 @@ describe('OciClient', () => {
     expect(signer.headers).toHaveBeenLastCalledWith(expect.objectContaining({ method: 'POST', body: '{"displayName":"instance-1"}' }));
   });
 
+  it('asks for every configured shape size in one capacity report', async () => {
+    const fetch = respond(200, { shapeAvailabilities: [] });
+
+    await client.create_capacity_report({ tenancy_id: 't', availability_domain: 'ad', shape: 'shape', shape_configs: [{ ocpus: 2, memory_gbs: 12 }, { ocpus: 1, memory_gbs: 6 }] });
+    const [, init] = fetch.mock.calls[0] ?? [];
+    expect(JSON.parse(String(init?.body))).toEqual({
+      compartmentId: 't',
+      availabilityDomain: 'ad',
+      shapeAvailabilities: [
+        { instanceShape: 'shape', instanceShapeConfig: { ocpus: 2, memoryInGBs: 12 } },
+        { instanceShape: 'shape', instanceShapeConfig: { ocpus: 1, memoryInGBs: 6 } },
+      ],
+    });
+  });
+
   it('returns oci error bodies as OciRequestFailed', async () => {
     respond(500, { code: 'InternalError', message: 'Out of host capacity.' });
 
-    const [error] = await client.create_capacity_report({ tenancy_id: 't', availability_domain: 'ad', shape: 'shape', ocpus: 2, memory_gbs: 12 });
+    const [error] = await client.create_capacity_report({ tenancy_id: 't', availability_domain: 'ad', shape: 'shape', shape_configs: [{ ocpus: 2, memory_gbs: 12 }] });
     expect(error).toBeInstanceOf(OciRequestFailed);
     expect(error).toMatchObject({ message: 'Out of host capacity.', payload: { method: 'POST', path: '/computeCapacityReports', status: 500, service_code: 'InternalError', request_id: 'req-1' } });
   });
