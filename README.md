@@ -13,9 +13,9 @@ always free `VM.Standard.A1.Flex` capacity is often exhausted, and a launch fail
 every minute, the worker:
 
 1. lists instances by name, and stops if one already exists
-2. asks oci for a compute capacity report for the shape
-3. launches the instance with an `opc-retry-token`, so a repeated request cannot create a second one
-4. notifies through ntfy
+2. asks oci for one compute capacity report covering every configured size of the shape
+3. launches the first available size, in config order, with an `opc-retry-token`, so a repeated request cannot create a second one
+4. notifies through ntfy, naming the size that launched
 
 the instance list is the only state. once the instance exists, every run is a no-op; delete the worker.
 
@@ -56,7 +56,7 @@ openssl pkey -in ~/.oci/<name>.pem -pubout -out ~/.oci/<name>_public.pem
 
 ### settings
 
-launch settings (shape, size, image, name, tags) live in `wrangler.toml` under `[vars]`.
+launch settings (shape, sizes, image, name, tags) live in `wrangler.toml` under `[vars]`. `INSTANCE_SHAPE_CONFIGS` is a json array of `{ ocpus, memory_gbs }`, most preferred first.
 
 tenancy-specific values are worker secrets. copy `.dev.vars.example` to `.dev.vars`, fill it in, then:
 
