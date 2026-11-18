@@ -14,8 +14,7 @@ type EnvironmentType = {
   INSTANCE_NAME: string;
   INSTANCE_HOSTNAME: string;
   INSTANCE_SHAPE: string;
-  INSTANCE_OCPUS: string;
-  INSTANCE_MEMORY_GBS: string;
+  INSTANCE_SHAPE_CONFIGS: string;
   INSTANCE_BOOT_VOLUME_GBS: string;
   INSTANCE_ASSIGN_PUBLIC_IP: string;
   INSTANCE_TAGS: string;

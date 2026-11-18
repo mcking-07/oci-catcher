@@ -1,5 +1,5 @@
 import { ValidationFailed } from '../errors';
-import type { ConfigType, EnvironmentType } from '../types';
+import type { ConfigType, EnvironmentType, ShapeConfigType } from '../types';
 
 const config = {} as ConfigType;
 
@@ -31,6 +31,15 @@ const tags = (value: unknown, key: string): Record<string, string> => {
   return parsed as Record<string, string>;
 };
 
+const shape_configs = (value: unknown, key: string): ShapeConfigType[] => {
+  const parsed: unknown = JSON.parse(required(value, key));
+  const size = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
+  const valid = Array.isArray(parsed) && parsed.length > 0 && parsed.every(entry => entry !== null && typeof entry === 'object' && size(entry.ocpus) && size(entry.memory_gbs));
+  if (!valid) throw new ValidationFailed(`config ${key} must be a non-empty json array of { ocpus, memory_gbs } positive numbers`);
+
+  return (parsed as ShapeConfigType[]).map(({ ocpus, memory_gbs }) => ({ ocpus, memory_gbs }));
+};
+
 const private_key = (value: unknown, key: string): string => {
   const pem = required(value, key).replace(/\\n/g, '\n');
   if (!pem.includes('-----BEGIN PRIVATE KEY-----')) throw new ValidationFailed(`config ${key} must be a pkcs#8 pem (BEGIN PRIVATE KEY)`);
@@ -56,8 +65,7 @@ const bootstrap = (env: EnvironmentType) => {
       name: required(env.INSTANCE_NAME, 'INSTANCE_NAME'),
       hostname: required(env.INSTANCE_HOSTNAME, 'INSTANCE_HOSTNAME'),
       shape: required(env.INSTANCE_SHAPE, 'INSTANCE_SHAPE'),
-      ocpus: positive(env.INSTANCE_OCPUS, 'INSTANCE_OCPUS'),
-      memory_gbs: positive(env.INSTANCE_MEMORY_GBS, 'INSTANCE_MEMORY_GBS'),
+      shape_configs: shape_configs(env.INSTANCE_SHAPE_CONFIGS, 'INSTANCE_SHAPE_CONFIGS'),
       boot_volume_gbs: positive(env.INSTANCE_BOOT_VOLUME_GBS, 'INSTANCE_BOOT_VOLUME_GBS'),
       assign_public_ip: boolean(env.INSTANCE_ASSIGN_PUBLIC_IP, 'INSTANCE_ASSIGN_PUBLIC_IP'),
       tags: tags(env.INSTANCE_TAGS, 'INSTANCE_TAGS'),

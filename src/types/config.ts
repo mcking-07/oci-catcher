@@ -10,12 +10,16 @@ type OciConfigType = {
   image_id: string;
 };
 
+type ShapeConfigType = {
+  ocpus: number;
+  memory_gbs: number;
+};
+
 type InstanceConfigType = {
   name: string;
   hostname: string;
   shape: string;
-  ocpus: number;
-  memory_gbs: number;
+  shape_configs: ShapeConfigType[];
   boot_volume_gbs: number;
   assign_public_ip: boolean;
   tags: Record<string, string>;
@@ -34,4 +38,4 @@ type ConfigType = {
   ntfy: NtfyConfigType;
 };
 
-export type { ConfigType, InstanceConfigType, NtfyConfigType, OciConfigType };
+export type { ConfigType, InstanceConfigType, NtfyConfigType, OciConfigType, ShapeConfigType };
