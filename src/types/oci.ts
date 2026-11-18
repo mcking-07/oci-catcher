@@ -1,3 +1,5 @@
+import type { ShapeConfigType } from './config';
+
 type OciMethodType = 'GET' | 'POST';
 
 type OciRequestType = {
@@ -18,8 +20,7 @@ type OciShapeRequestType = {
   tenancy_id: string;
   availability_domain: string;
   shape: string;
-  ocpus: number;
-  memory_gbs: number;
+  shape_configs: ShapeConfigType[];
 };
 
 type OciErrorBodyType = {
@@ -38,7 +39,7 @@ type OciInstanceType = {
 type OciAvailabilityStatusType = 'AVAILABLE' | 'OUT_OF_HOST_CAPACITY' | 'HARDWARE_NOT_SUPPORTED';
 
 type OciCapacityReportType = {
-  shapeAvailabilities: { instanceShape: string; availabilityStatus: OciAvailabilityStatusType; availableCount?: number }[];
+  shapeAvailabilities: { instanceShape: string; instanceShapeConfig?: { ocpus?: number; memoryInGBs?: number }; availabilityStatus: OciAvailabilityStatusType; availableCount?: number }[];
 };
 
 type OciLaunchDetailsType = {

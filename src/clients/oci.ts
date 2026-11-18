@@ -42,14 +42,14 @@ class OciClient {
     return this.request<OciInstanceType[]>({ method: 'GET', path: '/instances', query: { compartmentId: compartment_id, displayName: display_name } });
   });
 
-  create_capacity_report = safe(async ({ tenancy_id, availability_domain, shape, ocpus, memory_gbs }: OciShapeRequestType) => {
+  create_capacity_report = safe(async ({ tenancy_id, availability_domain, shape, shape_configs }: OciShapeRequestType) => {
     return this.request<OciCapacityReportType>({
       method: 'POST',
       path: '/computeCapacityReports',
       body: {
         compartmentId: tenancy_id,
         availabilityDomain: availability_domain,
-        shapeAvailabilities: [{ instanceShape: shape, instanceShapeConfig: { ocpus, memoryInGBs: memory_gbs } }],
+        shapeAvailabilities: shape_configs.map(({ ocpus, memory_gbs }) => ({ instanceShape: shape, instanceShapeConfig: { ocpus, memoryInGBs: memory_gbs } })),
       },
     });
   });
